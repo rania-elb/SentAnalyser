@@ -7,10 +7,50 @@ import seaborn as sns
 data_root = pathlib.Path('./')
 data = pd.read_csv(data_root/'train.tsv', sep='\t')
 
+################################
+# plot averages of sentiments
+numOfPhrases = 0
+sumOfSent = 0
+prevId = 1
+currSent = dataUniq['SentenceId'][0]
+currId = dataUniq['SentenceId'][0]
+
+wantedSents = []
+avgOfSents = []
+
+wantedSents.append(data['Sentiment'][0])
+
+for i in data['PhraseId']:
+	currId = data['SentenceId'][i-1]
+	if currId != prevId :
+		if numOfPhrases > 0 :
+			avgOfSents.append(sumOfSent/numOfPhrases)
+		else:
+			avgOfSents.append(0)
+		
+		numOfPhrases = 0
+		sumOfSent = 0
+		wantedSents.append(data['Sentiment'][i-1])
+		
+		prevId = currId
+	else:
+		sumOfSent = sumOfSent + data['Sentiment'][i-1]
+		numOfPhrases = numOfPhrases +1
+
+plt.plot(wantedSents[:20])
+plt.plot(avgOfSents[:20])
+plt.show()
+
+#######################################
+# plot number of phrases per sentiment
+
 fig = plt.figure(figsize=(8,5))
 ax = sns.barplot(x=data.Sentiment.unique(),y=data.Sentiment.value_counts());
 ax.set(xlabel='Labels')
 plt.show()
+
+#################################################
+# plot number of entire sentence per sentiment
 
 # try with entire sentences only
 #dataUniq = pd.read_csv(data_root/'train.tsv', sep='\t')
