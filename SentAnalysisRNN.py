@@ -9,23 +9,23 @@ from sklearn.model_selection import train_test_split
 
 df = pd.read_csv('train.tsv', sep='\t')
 
-df = df [:3000]
+df = df[:10000]
 
 train, test = train_test_split(df, test_size=0.20)
 
-
 # In[2]:
-
 
 from sklearn.feature_extraction.text import CountVectorizer
 import torch
+
+print(torch.cuda.is_available())
 
 vectorizer = CountVectorizer(binary=True)
 text_data = train["Phrase"]
 text_data = vectorizer.fit_transform(text_data)
 
 text_tensor_train = torch.from_numpy(text_data.todense()).float()
-
+print(text_tensor_train.shape)
 text_tensor_train = text_tensor_train.unsqueeze(1)
 
 #ajout du cas où on ne connait pas le mot
@@ -45,12 +45,12 @@ label_tensor_train = labelToVec(train)
 # In[3]:
 
 
-from nltk import word_tokenize
-# nltk.download('punkt')
+import nltk
+#nltk.download('punkt')
 
 def vocaToUnk(sentence, voca):
     s = []
-    for w in word_tokenize(sentence):
+    for w in ntlk.word_tokenize(sentence):
         if(w not in voca):
             w = '<unk>'
         s.append(w)
@@ -69,7 +69,7 @@ text_tensor_test = text_tensor_test.unsqueeze(1)
 # In[4]:
 
 
-print(text_tensor_test[1], text_tensor_train[0])
+#print(text_tensor_test[1], text_tensor_train[0])
 
 
 # In[5]:
@@ -116,6 +116,8 @@ output_dim = 5
 
 rnn = RNN(input_dim, embedding_size, hidden_dim, output_dim)
 
+rnn = rnn.to(device)
+
 import torch.optim as optim
 
 optimizer = optim.SGD(rnn.parameters(), lr=1e-3)
@@ -134,8 +136,8 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
     criterion = nn.CrossEntropyLoss()    
     rnn.zero_grad()
     
-    total_pred = torch.tensor([], dtype = torch.long)
-    total_targ = torch.tensor([], dtype = torch.long)
+    total_pred = torch.tensor([], dtype = torch.long).to(device)
+    total_targ = torch.tensor([], dtype = torch.long).to(device)
     
     for epoch in range(num_epoch):
         #un jour je ferais un truc propre
@@ -152,7 +154,7 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
             output, hidden = rnn(input, hidden)
             
             loss = criterion(output.squeeze(0), target)
-            loss.backward(retain_graph=True)
+            loss.backward(retain_graph=true)
             optimizer.step() 
             
             predicted = torch.argmax(output.data, dim=2)
@@ -213,16 +215,15 @@ print(train.groupby('Sentiment')["Sentiment"].count())
 print(test.groupby('Sentiment')["Sentiment"].count())
 
 #warning chiante, mais np
-cm = ConfusionMatrix(real.data, pred.squeeze(0).data)
-confusion_matrix(real, pred.squeeze(0))
-
+cm = ConfusionMatrix(real.cpu().data, pred.cpu().squeeze(0).data)
+confusion_matrix(real.cpu(), pred.cpu().squeeze(0))
+print(cm)
 
 # In[10]:
 
-
-get_ipython().magic('matplotlib inline')
-
 import matplotlib.pyplot as plt
+
+#get_ipython().magic('matplotlib inline')
 
 cm.plot()
 plt.show()
