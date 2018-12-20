@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 df = pd.read_csv('train.tsv', sep='\t')
 
-df = df[:10000]
+df = df[:15000]
 
 train, test = train_test_split(df, test_size=0.20)
 
@@ -20,7 +20,7 @@ import torch
 
 print(torch.cuda.is_available())
 
-vectorizer = CountVectorizer(binary=True)
+vectorizer = CountVectorizer()
 text_data = train["Phrase"]
 text_data = vectorizer.fit_transform(text_data)
 
@@ -95,7 +95,7 @@ class RNN(nn.Module):
         self.h2o = nn.Linear(hidden_size, output_size)       
         
     def forward(self, input, hidden):
-        
+
         hidden = hidden.to(device)
         output, hidden = self.rnn(input, hidden)
         output = self.h2o(hidden)
@@ -111,7 +111,7 @@ class RNN(nn.Module):
 
 input_dim = len(voca)
 embedding_size = 100
-hidden_dim = 100
+hidden_dim = 128
 output_dim = 5
 
 rnn = RNN(input_dim, embedding_size, hidden_dim, output_dim)
@@ -120,15 +120,11 @@ rnn = rnn.to(device)
 
 import torch.optim as optim
 
-optimizer = optim.SGD(rnn.parameters(), lr=1e-3)
+optimizer = optim.Adadelta(rnn.parameters(), lr=1e-1)
 
 def trainRNN(train_category, train_text, test_category, test_text, num_epoch, batch_size):
     
-    train_category = train_category.to(device)
-    train_text = train_text.to(device)
-    test_category = test_category.to(device)
-    test_text = test_text.to(device)
-    
+  
     size_train = train_text.size(0)
     size_test = test_text.size(0)
     
@@ -149,12 +145,13 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
         while (i + batch_size) <= size_train:
             tmp = i
             i += batch_size
-            input = train_text[tmp:i]
-            target = train_category[tmp:i]
+            input = train_text[tmp:i].to(device)
+            target = train_category[tmp:i].to(device)
             output, hidden = rnn(input, hidden)
             
             loss = criterion(output.squeeze(0), target)
-            loss.backward(retain_graph=true)
+            loss.backward(retain_graph=True)
+            torch.nn.utils.clip_grad_norm_(rnn.parameters(),0.5)
             optimizer.step() 
             
             predicted = torch.argmax(output.data, dim=2)
@@ -171,8 +168,8 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
         while (i + batch_size) <= size_test:
             tmp = i
             i += batch_size
-            input = test_text[tmp:i]
-            target = test_category[tmp:i]
+            input = test_text[tmp:i].to(device)
+            target = test_category[tmp:i].to(device)
             
             output, _ = rnn(input, hidden)
             loss = criterion(output.squeeze(0), target)   
@@ -199,8 +196,8 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
 # In[8]:
 
 
-batch_size = 50
-nb_epoch = 5
+batch_size = 128
+nb_epoch = 10
 
 pred, real = trainRNN(label_tensor_train, text_tensor_train, label_tensor_test, text_tensor_test, nb_epoch, batch_size)
 
