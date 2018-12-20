@@ -203,7 +203,7 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
 
 
 batch_size = 32
-nb_epoch = 3 
+nb_epoch = 100 
 
 pred, real, trainAcc, testAcc = trainRNN(label_tensor_train, text_tensor_train, label_tensor_test, text_tensor_test, nb_epoch, batch_size)
 
@@ -226,5 +226,5 @@ print(trainAcc, testAcc)
 
 import matplotlib.pyplot as plt
 
-plt.plot(trainAcc, range(1,nb_epoch+1), testAcc, range(1,nb_epoch+1))
+plt.plot(range(1,nb_epoch+1), testAcc, range(1,nb_epoch+1), trainAcc)
 plt.savefig('acc.png')
