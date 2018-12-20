@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 df = pd.read_csv('train.tsv', sep='\t')
 
-df = df[:15000]
+#df = df[:15000]
 
 train, test = train_test_split(df, test_size=0.20)
 
@@ -149,8 +149,10 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
             target = train_category[tmp:i].to(device)
             output, hidden = rnn(input, hidden)
             
+            hidden = hidden.detach() 
             loss = criterion(output.squeeze(0), target)
-            loss.backward(retain_graph=True)
+            loss.backward()
+            
             torch.nn.utils.clip_grad_norm_(rnn.parameters(),0.5)
             optimizer.step() 
             
@@ -196,7 +198,7 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
 # In[8]:
 
 
-batch_size = 128
+batch_size = 64
 nb_epoch = 10
 
 pred, real = trainRNN(label_tensor_train, text_tensor_train, label_tensor_test, text_tensor_test, nb_epoch, batch_size)
