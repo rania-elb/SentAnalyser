@@ -60,16 +60,16 @@ df['SentimentText'] = df.Phrase.progress_apply(lambda x: x.strip())
 words = Counter()
 for sent in tqdm_notebook(df.Phrase.values):
     words.update(w.text.lower() for w in nlp(sent))
-len(words)
-words.most_common(20)
+#len(words)
+#words.most_common(20)
 
 
 
 words = sorted(words, key=words.get, reverse=True)
-words[:20]
+#words[:20]
 
 words = ['_PAD','_UNK'] + words
-words[:10]
+#words[:10]
 
 
 word2idx = {o:i for i,o in enumerate(words)}
@@ -253,3 +253,4 @@ m = SimpleGRU(vocab_size, embedding_dim, n_hidden, n_out).cuda()
 opt = optim.Adam(m.parameters(), 1e-2)
 
 fit(model=m, train_dl=train_dl, val_dl=None, loss_fn=F.nll_loss, opt=opt, epochs=4)
+torch.save(model, 'filename.pt')
