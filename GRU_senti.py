@@ -89,7 +89,7 @@ df.head()
 # subclass the custom dataset class with torch.utils.data.Dataset
 # implement __len__ and __getitem__ function
 class VectorizeData(Dataset):
-    def __init__(self, df_path, maxlen=10):
+    def __init__(self, df_path, maxlen=200):
         self.maxlen = maxlen
         self.df = pd.read_csv(df_path, error_bad_lines=False, sep='\t')
         self.df['Phrase'] = self.df.Phrase.apply(lambda x: x.strip())
