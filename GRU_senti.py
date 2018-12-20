@@ -253,4 +253,4 @@ m = SimpleGRU(vocab_size, embedding_dim, n_hidden, n_out).cuda()
 opt = optim.Adam(m.parameters(), 1e-2)
 
 fit(model=m, train_dl=train_dl, val_dl=None, loss_fn=F.nll_loss, opt=opt, epochs=4)
-torch.save(model, 'simple_gru_model.pt')
+torch.save(m, 'simple_gru_model.pt')
