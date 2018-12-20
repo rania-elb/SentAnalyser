@@ -60,16 +60,16 @@ df['SentimentText'] = df.Phrase.progress_apply(lambda x: x.strip())
 words = Counter()
 for sent in tqdm_notebook(df.Phrase.values):
     words.update(w.text.lower() for w in nlp(sent))
-len(words)
-words.most_common(20)
+#len(words)
+#words.most_common(20)
 
 
 
 words = sorted(words, key=words.get, reverse=True)
-words[:20]
+#words[:20]
 
 words = ['_PAD','_UNK'] + words
-words[:10]
+#words[:10]
 
 
 word2idx = {o:i for i,o in enumerate(words)}
@@ -89,7 +89,7 @@ df.head()
 # subclass the custom dataset class with torch.utils.data.Dataset
 # implement __len__ and __getitem__ function
 class VectorizeData(Dataset):
-    def __init__(self, df_path, maxlen=10):
+    def __init__(self, df_path, maxlen=200):
         self.maxlen = maxlen
         self.df = pd.read_csv(df_path, error_bad_lines=False, sep='\t')
         self.df['Phrase'] = self.df.Phrase.apply(lambda x: x.strip())
@@ -253,3 +253,4 @@ m = SimpleGRU(vocab_size, embedding_dim, n_hidden, n_out).cuda()
 opt = optim.Adam(m.parameters(), 1e-2)
 
 fit(model=m, train_dl=train_dl, val_dl=None, loss_fn=F.nll_loss, opt=opt, epochs=4)
+torch.save(m, 'simple_gru_model.pt')
