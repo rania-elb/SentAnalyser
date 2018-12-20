@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # In[1]:
-
+print('go')
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -11,7 +11,10 @@ df = pd.read_csv('train.tsv', sep='\t')
 
 #df = df[:15000]
 
-train, test = train_test_split(df, test_size=0.20)
+#train, test = train_test_split(df, test_size=0.20)
+
+train = df[:124848]
+test = df[124849:]
 
 # In[2]:
 
@@ -65,13 +68,6 @@ label_tensor_test = labelToVec(test)
 
 text_tensor_test = text_tensor_test.unsqueeze(1)
 
-
-# In[4]:
-
-
-#print(text_tensor_test[1], text_tensor_train[0])
-
-
 # In[5]:
 
 
@@ -108,6 +104,7 @@ class RNN(nn.Module):
 
 # In[7]:
 
+import numpy as np
 
 input_dim = len(voca)
 embedding_size = 100
@@ -135,12 +132,16 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
     total_pred = torch.tensor([], dtype = torch.long).to(device)
     total_targ = torch.tensor([], dtype = torch.long).to(device)
     
+    train_loss = np.zeros(num_epoch)
+    train_acc = np.zeros(num_epoch)
+    test_loss = np.zeros(num_epoch)
+    test_acc = np.zeros(num_epoch)
+ 
     for epoch in range(num_epoch):
         #un jour je ferais un truc propre
         nb_batch_train = len(train_text) / batch_size
         nb_batch_test = len(test_text) / batch_size
-        train_loss = 0
-        train_acc = 0
+
         i = 0
         while (i + batch_size) <= size_train:
             tmp = i
@@ -159,12 +160,10 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
             predicted = torch.argmax(output.data, dim=2)
             correct = (predicted == target).sum().item()
             
-            train_loss += loss.item()
-            train_acc += correct / batch_size
+            train_loss[epoch]  += loss.item()
+            train_acc[epoch] += correct / batch_size
         
         i = 0
-        test_loss = 0
-        test_acc = 0        
         
         #j'aime faire des boucles presque pareilles
         while (i + batch_size) <= size_test:
@@ -179,29 +178,34 @@ def trainRNN(train_category, train_text, test_category, test_text, num_epoch, ba
             predicted = torch.argmax(output.data, dim=2)
             correct = (predicted == target).sum().item()
             
-            test_loss += loss.item()
-            test_acc += correct / batch_size
+            test_loss[epoch] += loss.item()
+            test_acc[epoch] += correct / batch_size
             
             #dernière epoch
             if epoch + 1 == num_epoch:
                 total_pred = torch.cat((total_pred, predicted), 1)
                 total_targ = torch.cat((total_targ, target), 0)
-                
-        print(epoch, "loss :", train_loss / nb_batch_train, "/ acc :", train_acc / nb_batch_train)
-        print("Test loss :", test_loss / nb_batch_test, "/ acc :", test_acc / nb_batch_test)
+         
+        train_loss[epoch] = train_loss[epoch] / nb_batch_train
+        train_acc[epoch] = train_acc[epoch] / nb_batch_train
+        test_loss[epoch] = test_loss[epoch] / nb_batch_test
+        test_acc[epoch] = test_acc[epoch] / nb_batch_test
+ 
+        print(epoch, "loss :", train_loss[epoch], "/ acc :", train_acc[epoch])
+        print("Test loss :", test_loss[epoch], "/ acc :", test_acc[epoch])
         
     print('Fini !')
     
-    return total_pred, total_targ
+    return total_pred, total_targ, train_acc, test_acc
 
 
 # In[8]:
 
 
-batch_size = 64
-nb_epoch = 10
+batch_size = 32
+nb_epoch = 3 
 
-pred, real = trainRNN(label_tensor_train, text_tensor_train, label_tensor_test, text_tensor_test, nb_epoch, batch_size)
+pred, real, trainAcc, testAcc = trainRNN(label_tensor_train, text_tensor_train, label_tensor_test, text_tensor_test, nb_epoch, batch_size)
 
 
 # In[9]:
@@ -218,12 +222,9 @@ cm = ConfusionMatrix(real.cpu().data, pred.cpu().squeeze(0).data)
 confusion_matrix(real.cpu(), pred.cpu().squeeze(0))
 print(cm)
 
-# In[10]:
+print(trainAcc, testAcc)
 
 import matplotlib.pyplot as plt
 
-#get_ipython().magic('matplotlib inline')
-
-cm.plot()
-plt.show()
-
+plt.plot(trainAcc, range(1,nb_epoch+1), testAcc, range(1,nb_epoch+1))
+plt.savefig('acc.png')
