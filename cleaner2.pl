@@ -3,10 +3,12 @@
 my $file;
 my $cleanedFile;
 
-my $line;
+my $line1;
 my $line2;
-my $prefixe;
-my $suffixe;
+my $prefixe1;
+my $prefixe2;
+my $suffixe1;
+my $suffixe2;
 
 open($file, "<train2.tsv");
 open($cleanedFile, ">train_cl.tsv");
@@ -14,34 +16,45 @@ open($cleanedFile, ">train_cl.tsv");
 ################
 # Header
 
-$line = <$file>;
-if($line =~ s/^\t//){}
-print $cleanedFile $line;
+$line1 = <$file>;
+if($line1 =~ s/^\t//){}
+print $cleanedFile $line1;
 
 ################
 # Cleaning
 
-while($line = <$file>){
-	if($line =~ /^[0-9]+\t([0-9]+\t[0-9]+\t)(.*)(\t[0-4]\n$)/){
-		$prefixe = $1;
-		$line = " ".$2." ";
-		$suffixe = $3;
+#first $line1 iteration
+
+$line1 = <$file>;
+
+if($line1 =~ /^[0-9]+\t([0-9]+\t[0-9]+\t)(.*)(\t[0-4]\n$)/){
+	$prefixe1 = $1;
+	$line1 = " ".$2." ";
+	$suffixe1 = $3;
+}
+	# spaces
+if($line1 =~ s/ +/ /g){}
+if($line1 =~ s/^ | $//g){}
+
+while($line2 = <$file>){
+	if($line2 =~ /^[0-9]+\t([0-9]+\t[0-9]+\t)(.*)(\t[0-4]\n$)/){
+		$prefixe2 = $1;
+		$line2 = " ".$2." ";
+		$suffixe2 = $3;
 	}
 	
-	# Symbols
-	if($line =~ s/[\\\/\-,.':`=;!?*\$&#+]/ /g){}
+	# spaces
+	if($line2 =~ s/ +/ /g){}
+	if($line2 =~ s/^ | $//g){}
 	
-	# Numerals
-	if($line =~ s/ [a-zA-Z0-9]*[0-9][a-zA-Z0-9]* / /g){}
-	
-	# One letter long
-	while($line =~ s/ [a-zA-Z] / /g){}
-	
-	if($line =~ s/ +/ /g){}
-	if($line =~ s/^ | $//g){}
-	
-	if($line ne ""){
-		print $cleanedFile $prefixe.$line.$suffixe;
+	if($line2 ne ""){
+		if($line1 ne $line2){
+			print $cleanedFile $prefixe1.$line1.$suffixe1;
+		}
+		
+		$prefixe1 = $prefixe2;
+		$line1 = $line2;
+		$suffixe1 = $suffixe2;
 	}
 }
 
