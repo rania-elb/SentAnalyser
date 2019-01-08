@@ -30,13 +30,13 @@ while($line = <$file>){
 	# Symbols
 	if($line =~ s/[,.:`=;!?*\$&#+]/ /g){} #ne supprime pas \\ \/ \- '
 	
-	if($line =~ s/ '' / /g){} #guillemets
+	while($line =~ s/ '' | - | -- | \\\/ | \\ / /){} #guillemets
 	
 	# Numerals
-	if($line =~ s/ [a-zA-Z0-9]*[0-9][a-zA-Z0-9]* / /g){}
+	while($line =~ s/ [a-zA-Z0-9]*[0-9][a-zA-Z0-9]* / /){}
 	
 	# One letter long
-	while($line =~ s/ [a-zA-Z] / /g){}
+	while($line =~ s/ [a-zA-Z] / /){}
 	
 	if($line =~ s/ +/ /g){}
 	if($line =~ s/^ | $//g){}
