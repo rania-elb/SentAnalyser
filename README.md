@@ -19,3 +19,7 @@ Project Roadmap
 3. Train and evaluate a vanilla deep recurrent neural network (RNN)
 4. Use the Pytorch framework to train the RNN network.
 5. Optimize the model and propose enhancement (Regularization, network init, new architecture)
+
+References:
+https://arxiv.org/pdf/1801.06146.pdf
+
